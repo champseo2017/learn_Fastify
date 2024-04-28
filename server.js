@@ -1,12 +1,28 @@
-const fastify = require("fastify")();
+const fastify = require("fastify");
 
-fastify.get("/", (request, reply) => {
+const serverOptions = {
+  logger: true,
+};
+
+const app = fastify(serverOptions);
+
+app.get("/", (request, reply) => {
   reply.send({ hello: "world" });
 });
 
-fastify.listen({ port: 3000 }, (err, address) => {
+app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
-    fastify.log.error(err);
+    app.log.error(err);
   }
   console.log(`Server listening at ${address}`);
 });
+
+/* 
+นั่นหมายความว่า Server จะรับฟัง Request จากทุก Network Interface บนเครื่อง ซึ่งรวมถึงการเข้าถึงจากเครือข่ายภายนอกด้วย
+
+การกำหนดค่า Host เป็น `'0.0.0.0'` ในขณะพัฒนาบน Local Environment อาจมีประโยชน์ในกรณีที่:
+- เราต้องการทดสอบแอปพลิเคชันจากเครื่องอื่นในเครือข่ายเดียวกัน เช่น ทดสอบบนมือถือหรืออุปกรณ์อื่นๆ
+- เรากำลังพัฒนาแอปพลิเคชันที่รันใน Docker Container บน Local Machine ซึ่งต้องการให้เข้าถึงได้จากเครือข่ายภายนอก Container
+
+ดังนั้น การตัดสินใจกำหนดหรือไม่กำหนดค่า Host และจะกำหนดเป็นค่าใดนั้น ขึ้นอยู่กับความต้องการและกรณีการใช้งานของเราในขณะที่พัฒนาบน Local Environment เป็นหลัก ทั้งนี้ การกำหนดหรือไม่กำหนดค่า Host ไม่ได้ส่งผลต่อการทำงานของแอปพลิเคชันแต่อย่างใด แต่เป็นเรื่องของการควบคุมการเข้าถึง Server จากเครือข่ายภายในและภายนอกเท่านั้น
+*/
