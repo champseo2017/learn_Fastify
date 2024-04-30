@@ -6,6 +6,22 @@ const serverOptions = {
 
 const app = fastify(serverOptions);
 
+// เพิ่ม onRoute's hook
+app.addHook("onRoute", (routeOptions) => {
+  console.log("onRoute hook executed");
+});
+
+// เพิ่ม onRegister's hook
+app.addHook("onRegister", (registerOptions) => {
+  console.log("onRegister hook executed");
+});
+
+// เพิ่ม onReady's hook
+app.addHook("onReady", (done) => {
+  console.log("onReady hook executed");
+  done();
+});
+
 app.get("/", (request, reply) => {
   reply.send({ hello: "world" });
 });
@@ -19,20 +35,35 @@ app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
 
 /* 
 ลำดับการทำงานและตะขอวงจรชีวิตของ Fastify 
-1. เริ่มต้นแอปพลิเคชัน (Start application event)
-   - เข้าสู่เฟส Starting 
+const fastify = require('fastify')();
 
-2. ประมวลผลตะขอ (hooks) แบบขนาน
-   - ประมวลผลคิว onRoute's hooks 
-   - ประมวลผลคิว onRegister's hooks
+// เพิ่ม onRoute's hook
+fastify.addHook('onRoute', (routeOptions) => {
+  console.log('onRoute hook executed');
+});
 
-3. ประมวลผลตะขอ onReady's hooks
-   - ถ้ามีข้อผิดพลาด ไปที่ "Startup Failed"
-   - ถ้าไม่มีข้อผิดพลาด ไปที่ "Server Listening"
+// เพิ่ม onRegister's hook
+fastify.addHook('onRegister', (registerOptions) => {
+  console.log('onRegister hook executed');
+});
 
-4. เกิดเหตุการณ์หยุดแอปพลิเคชัน (Stop application event) 
-   - เข้าสู่เฟส Closing
-   - ประมวลผลตะขอ onClose's hooks 
+// เพิ่ม onReady's hook
+fastify.addHook('onReady', (done) => {
+  console.log('onReady hook executed');
+  done();
+});
 
-5. แอปพลิเคชันหยุดการทำงาน (Stopped)
+// ลงทะเบียน route
+fastify.get('/', (request, reply) => {
+  reply.send({ hello: 'world' });
+});
+
+// เริ่มต้น server
+fastify.listen(3000, (err) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  console.log('Server listening on port 3000');
+});
 */
