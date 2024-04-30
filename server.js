@@ -1,7 +1,9 @@
 const fastify = require("fastify");
 
 const serverOptions = {
-  logger: true,
+  logger: {
+    level: "debug",
+  },
   keepAliveTimeout: 5000,
   connectionTimeout: 10000,
   bodyLimit: 1048576, // 1MB
@@ -30,52 +32,32 @@ app.get("/", (request, reply) => {
   reply.send({ hello: "world" });
 });
 
-app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
+app.listen({ port: 0, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     app.log.error(err);
+    process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  const { port } = app.server.address();
+
+  app.log.info(`Server listening at ${address}`);
+  app.log.info(`HTTP Server port is ${port}`);
+  app.log.debug("Fastify listening with the config:", app.initialConfig);
 });
 
 /* 
-root application instance
-const serverOptions = {
-  logger: {
-    level: 'info',
-    file: '/path/to/logs/fastify.log'
-  },
-  https: {
-    key: fs.readFileSync('/path/to/key.pem'),
-    cert: fs.readFileSync('/path/to/cert.pem')
-  },
-  keepAliveTimeout: 5000,
-  connectionTimeout: 10000,
-  bodyLimit: 1048576, // 1MB
-  maxParamLength: 100,
-  http2: true,
-  ajv: {
-    customOptions: { nullable: true }
-  },
-  serverFactory: (handler, opts) => {
-    const server = http2.createServer(opts, handler)
-    return server
-  },
-  onProtoPoisoning: 'remove',
-  onConstructorPoisoning: 'remove'
-};
+เซิร์ฟเวอร์  Fastify (properties) 
+โค้ดนี้แสดงการใช้งานคุณสมบัติอินสแตนซ์ของ Fastify:
 
-เรากำหนดอ็อบเจ็กต์ `serverOptions` ที่มีการกำหนดค่าต่าง ๆ เช่น:
-   - `logger` กำหนดระดับการบันทึก (log level) และไฟล์สำหรับเก็บล็อก
-   - `https` กำหนดคีย์และใบรับรอง SSL/TLS สำหรับเปิดใช้งาน HTTPS
-   - `keepAliveTimeout` และ `connectionTimeout` กำหนดค่าหมดเวลาต่าง ๆ
-   - `bodyLimit` และ `maxParamLength` จำกัดขนาดและความยาวของข้อมูลที่ยอมรับ
-   - `http2` เปิดใช้งานการสนับสนุน HTTP/2
-   - `ajv` กำหนดค่าตัวเลือกเพิ่มเติมสำหรับการตรวจสอบข้อมูล
-   - `serverFactory` กำหนดฟังก์ชันเพื่อสร้างเซิร์ฟเวอร์ที่กำหนดเอง
-   - `onProtoPoisoning` และ `onConstructorPoisoning` กำหนดพฤติกรรมเมื่อเกิดการโจมตีบางประเภท
+1. เรากำหนดค่าตัวเลือก `logger` ในการสร้างอินสแตนซ์ Fastify โดยกำหนด `level` เป็น `'debug'` เพื่อเปิดใช้งานการบันทึก log ระดับ debug
 
-   - เมื่อไคลเอนต์เชื่อมต่อกับเซิร์ฟเวอร์ ต้องสร้างการเชื่อมต่อให้สำเร็จภายใน 10 วินาที (10000 มิลลิวินาที) ตามที่กำหนดโดย `connectionTimeout` ไม่เช่นนั้นการเชื่อมต่อจะถูกยกเลิก
-- หลังจากสร้างการเชื่อมต่อและไคลเอนต์ส่ง request มา เซิร์ฟเวอร์จะรอ request ถัดไปเป็นเวลา 5 วินาที (5000 มิลลิวินาที) ตามที่กำหนดโดย `keepAliveTimeout`
-- ถ้าไม่มี request ใหม่มาภายใน 5 วินาที เซิร์ฟเวอร์จะปิดการเชื่อมต่อ
-- แต่ถ้ามี request ใหม่มาภายใน 5 วินาที การเชื่อมต่อจะยังคงเปิดอยู่และเวลานับถอยหลังจะเริ่มใหม่หลังจากตอบกลับ request นั้น
+2. เรากำหนดเส้นทาง GET สำหรับ path `'/'` ซึ่งส่งคืน JSON object `{ hello: 'world' }`
+
+3. เราเรียกใช้เมธอด `listen()` เพื่อเริ่มต้นเซิร์ฟเวอร์ โดยกำหนด `port` เป็น 0 เพื่อให้ระบบปฏิบัติการกำหนดพอร์ตที่ว่างให้ และกำหนด `host` เป็น `'0.0.0.0'` เพื่อรับฟังทุกอินเทอร์เฟซเครือข่าย
+
+4. ภายในคอลแบ็กของ `listen()` เราตรวจสอบข้อผิดพลาด และพิมพ์ข้อความ log โดยใช้คุณสมบัติอินสแตนซ์:
+   - `app.log.debug()` ใช้พิมพ์ log ระดับ debug โดยแสดงค่าของ `app.initialConfig` ซึ่งเป็นการกำหนดค่าเริ่มต้นของเซิร์ฟเวอร์
+   - `app.server.address()` ใช้เพื่อเข้าถึงที่อยู่และพอร์ตของเซิร์ฟเวอร์ที่รันอยู่
+   - `app.log.info()` ใช้พิมพ์ log ระดับ info โดยแสดงหมายเลขพอร์ตที่เซิร์ฟเวอร์กำลังรับฟัง
+
+เมื่อรันโค้ดนี้ เราจะเห็นข้อความ log ที่แสดงข้อมูลการกำหนดค่าเซิร์ฟเวอร์และหมายเลขพอร์ตที่เซิร์ฟเวอร์กำลังรับฟัง ซึ่งแสดงการใช้งานคุณสมบัติอินสแตนซ์ต่าง ๆ ของ Fastify
 */
