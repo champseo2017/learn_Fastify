@@ -33,28 +33,18 @@ app.ready().then(() => {
   console.log("Application is ready!");
 });
 
-// ประกาศ route แบบย่อ แบบที่ 2
+// ประกาศ route แบบย่อ แบบที่ 3
 /* 
 ใช้ app.get() เพื่อประกาศ route สำหรับ HTTP GET
 พารามิเตอร์แรกเป็น string กำหนด URL ของ route เป็น '/hello'
-พารามิเตอร์ที่สองเป็น object ที่ประกอบด้วย:
-
-key handler ที่มีค่าเป็น function handler
-key อื่นๆ สำหรับกำหนด options เพิ่มเติมของ route
-
-someOption
-1. `schema`: กำหนด schema สำหรับ request และ response เพื่อตรวจสอบความถูกต้องของข้อมูล
-2. `preValidation`: กำหนด function ที่จะรันก่อนการ validation ของ request
-3. `preHandler`: กำหนด function ที่จะรันก่อน handler หลักของ route
-4. `onRequest`, `onResponse`, `preSerialization`, `onError`, `onSend`, `onTimeout`: กำหนด hook สำหรับจุดต่างๆ ในวงจรชีวิตของ request
-5. `attachValidation`: กำหนดให้ผนวกผลการ validation เข้ากับ request object
-6. `validatorCompiler`: กำหนด compiler สำหรับ schema validation
+พารามิเตอร์ที่สองเป็น object routeOptions ที่กำหนด options ของ route
+พารามิเตอร์ที่สามเป็น function handler
 */
-app.get("/hello", {
-  handler: (request, reply) => {
-    reply.send("Hello world!");
-  },
+const routeOptions = {
   someOption: "value",
+};
+app.get("/hello", routeOptions, (request, reply) => {
+  reply.send("Hello, world!");
 });
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
