@@ -34,14 +34,25 @@ app.ready().then(() => {
 });
 
 /* 
-ตัวอย่างการใช้ async handler และ return payload โดยตรง
+ตัวอย่างการนำ async handler ไปใช้ซ้ำในฟังก์ชัน handler อื่น
 
-ใน async handler เราสามารถ return payload โดยตรงได้ โดยไม่ต้องเรียก reply.send()
-การ return string 'hello' จะถูกส่งเป็น response body โดยอัตโนมัติ
+เรากำหนดฟังก์ชัน foo และ bar เป็น named async function
+ฟังก์ชัน bar เรียกใช้ฟังก์ชัน foo และรอผลลัพธ์ด้วย await แล้วนำผลลัพธ์ที่ได้มาสร้าง response payload ใหม่
+การใช้ async function ที่ return ค่าโดยตรงแบบนี้ ทำให้เรานำ handler ไปใช้ซ้ำได้ง่ายขึ้น โดยไม่ต้องกังวลเรื่องการส่งต่อ reply object
+
+สรุปได้ว่า Fastify ให้ความยืดหยุ่นในการเขียน handler ทั้งแบบ synchronous และ asynchronous โดยเราสามารถเลือกใช้งานได้ตามความเหมาะสม ไม่ว่าจะเป็นการใช้ reply.send(), return โดยตรง หรือ await ผลลัพธ์จาก async function อื่นๆ ซึ่งช่วยให้เราจัดการกับ business logic และ response ได้ง่ายและมีประสิทธิภาพมากขึ้น
 */
-app.get("/hello", async function myHandler(request, reply) {
-  return "hello";
-});
+async function foo(request, reply) {
+  return 1;
+}
+
+async function bar(request, reply) {
+  const oneResponse = await foo(request, reply);
+  return { one: oneResponse, two: 2 };
+}
+
+app.get("/foo", foo);
+app.get("/bar", bar);
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
