@@ -34,9 +34,15 @@ app.ready().then(() => {
 });
 
 /* 
-Handler ของ route คือฟังก์ชันที่ต้องดำเนินการตามตรรกะทางธุรกิจของ endpoint Fastify จะส่งคอมโพเนนต์หลักทั้งหมดให้กับ handler เพื่อให้สามารถตอบสนองต่อ request ของ client ได้ โดย request และ reply object จะถูกส่งเป็น argument ให้กับ handler และ handler สามารถเข้าถึง server instance ได้ผ่าน function binding (this)
+ตัวอย่างการเรียก reply.send() หลายครั้งใน handler (ไม่ควรทำ):
 
-ภายใน function เราสามารถเข้าถึง application instance ได้ผ่าน this เพื่อเรียกใช้ this.server.address() และส่งผลลัพธ์กลับไปใน response
+app.get('/multi', function multi(request, reply) {
+  reply.send('one')
+  reply.send('two')
+  reply.send('three')
+  this.log.info('this line is executed')
+})
+
 */
 function business(request, reply) {
   // `this` คือ instance ของ Fastify application
