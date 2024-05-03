@@ -33,19 +33,17 @@ app.ready().then(() => {
   console.log("Application is ready!");
 });
 
-// ประกาศ route แบบย่อ แบบที่ 3
 /* 
-ใช้ app.get() เพื่อประกาศ route สำหรับ HTTP GET
-พารามิเตอร์แรกเป็น string กำหนด URL ของ route เป็น '/hello'
-พารามิเตอร์ที่สองเป็น object routeOptions ที่กำหนด options ของ route
-พารามิเตอร์ที่สามเป็น function handler
+Handler ของ route คือฟังก์ชันที่ต้องดำเนินการตามตรรกะทางธุรกิจของ endpoint Fastify จะส่งคอมโพเนนต์หลักทั้งหมดให้กับ handler เพื่อให้สามารถตอบสนองต่อ request ของ client ได้ โดย request และ reply object จะถูกส่งเป็น argument ให้กับ handler และ handler สามารถเข้าถึง server instance ได้ผ่าน function binding (this)
+
+ภายใน function เราสามารถเข้าถึง application instance ได้ผ่าน this เพื่อเรียกใช้ this.server.address() และส่งผลลัพธ์กลับไปใน response
 */
-const routeOptions = {
-  someOption: "value",
-};
-app.get("/hello", routeOptions, (request, reply) => {
-  reply.send("Hello, world!");
-});
+function business(request, reply) {
+  // `this` คือ instance ของ Fastify application
+  reply.send({ helloFrom: this.server.address() });
+}
+
+app.get("/server", business);
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
