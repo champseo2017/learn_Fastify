@@ -33,20 +33,14 @@ app.ready().then(() => {
   console.log("Application is ready!");
 });
 
-app.route({
-  url: "/",
-  method: "GET",
-  handler: (request, reply) => {
-    reply.send({ hello: "Hello World Home" });
-  },
-});
-
-app.route({
-  url: "/hello",
-  method: "GET",
-  handler: (request, reply) => {
-    reply.send("world");
-  },
+// ประกาศ route แบบย่อ แบบที่ 1
+/* 
+ใช้ app.get() เพื่อประกาศ route สำหรับ HTTP GET
+พารามิเตอร์แรกเป็น string กำหนด URL ของ route เป็น '/hello'
+พารามิเตอร์ที่สองเป็น function handler ที่จะถูกเรียกเมื่อมี request เข้ามาที่ route นี้
+*/
+app.get("/hello", (request, reply) => {
+  reply.send("Hello world!");
 });
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
@@ -78,7 +72,5 @@ app.inject(
 );
 
 /* 
-เราสามารถใช้ทั้งสองอย่างร่วมกันได้ เช่น ลงทะเบียน hook ด้วย app.addHook("onReady", ...) สำหรับงานที่ต้องทำเมื่อแอปพลิเคชันพร้อม และใช้ app.ready().then() เพื่อรอให้แอปพลิเคชันพร้อมก่อนทำสิ่งอื่นต่อ ขึ้นอยู่กับความต้องการและรูปแบบของแอปพลิเคชัน
 
-app.inject เป็นเครื่องมือที่มีประโยชน์มากสำหรับการทดสอบแอปพลิเคชัน Fastify โดยไม่ต้องเริ่มต้นเซิร์ฟเวอร์จริง ช่วยให้เราสามารถทดสอบ routes, handlers, middleware และ plugins 
 */
