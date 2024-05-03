@@ -6,7 +6,7 @@
   "author": "Champ.art.website <32265715+champseo2017@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node server.js"
+    "start": "node --watch server.js"
   },
   "dependencies": {
     "fastify": "^4.26.2"

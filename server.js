@@ -33,11 +33,23 @@ app.ready().then(() => {
   console.log("Application is ready!");
 });
 
-app.get("/", (request, reply) => {
-  reply.send({ hello: "world" });
+app.route({
+  url: "/",
+  method: "GET",
+  handler: (request, reply) => {
+    reply.send({ hello: "Hello World Home" });
+  },
 });
 
-app.listen({ port: 0, host: "0.0.0.0" }, (err, address) => {
+app.route({
+  url: "/hello",
+  method: "GET",
+  handler: (request, reply) => {
+    reply.send("world");
+  },
+});
+
+app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     app.log.error(err);
     process.exit(1);
