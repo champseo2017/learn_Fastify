@@ -43,6 +43,9 @@ app.get('/multi', function multi(request, reply) {
   this.log.info('this line is executed')
 })
 
+Handler นี้จะตอบกลับด้วย string 'one' เท่านั้น ส่วนการเรียก reply.send() ครั้งถัดๆ ไปจะถูกเพิกเฉยและเกิด error FST_ERR_REP_ALREADY_SENT ใน console
+บรรทัดสุดท้ายที่เรียก this.log.info() จะถูกประมวลผลตามปกติ แม้จะมีการเรียก reply.send() ซ้ำซ้อนก็ตาม
+
 */
 function business(request, reply) {
   // `this` คือ instance ของ Fastify application
