@@ -34,22 +34,14 @@ app.ready().then(() => {
 });
 
 /* 
-ตัวอย่างการใช้ return ใน synchronous handler
+ตัวอย่างการใช้ async handler และ return payload โดยตรง
 
-function business(request, reply) {
-  return {helloFrom: this.server.address()}
-}
-
-เราสามารถใช้ return เพื่อส่งค่ากลับโดยตรงใน synchronous handler ได้
-Fastify จะจัดการส่ง response ให้เราโดยอัตโนมัติ ทำให้ไม่ต้องกังวลเรื่องการเรียก reply.send() ซ้ำซ้อน
-
+ใน async handler เราสามารถ return payload โดยตรงได้ โดยไม่ต้องเรียก reply.send()
+การ return string 'hello' จะถูกส่งเป็น response body โดยอัตโนมัติ
 */
-function business(request, reply) {
-  // `this` คือ instance ของ Fastify application
-  reply.send({ helloFrom: this.server.address() });
-}
-
-app.get("/server", business);
+app.get("/hello", async function myHandler(request, reply) {
+  return "hello";
+});
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
