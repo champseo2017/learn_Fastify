@@ -34,17 +34,14 @@ app.ready().then(() => {
 });
 
 /* 
-ตัวอย่างการเรียก reply.send() หลายครั้งใน handler (ไม่ควรทำ):
+ตัวอย่างการใช้ return ใน synchronous handler
 
-app.get('/multi', function multi(request, reply) {
-  reply.send('one')
-  reply.send('two')
-  reply.send('three')
-  this.log.info('this line is executed')
-})
+function business(request, reply) {
+  return {helloFrom: this.server.address()}
+}
 
-Handler นี้จะตอบกลับด้วย string 'one' เท่านั้น ส่วนการเรียก reply.send() ครั้งถัดๆ ไปจะถูกเพิกเฉยและเกิด error FST_ERR_REP_ALREADY_SENT ใน console
-บรรทัดสุดท้ายที่เรียก this.log.info() จะถูกประมวลผลตามปกติ แม้จะมีการเรียก reply.send() ซ้ำซ้อนก็ตาม
+เราสามารถใช้ return เพื่อส่งค่ากลับโดยตรงใน synchronous handler ได้
+Fastify จะจัดการส่ง response ให้เราโดยอัตโนมัติ ทำให้ไม่ต้องกังวลเรื่องการเรียก reply.send() ซ้ำซ้อน
 
 */
 function business(request, reply) {
