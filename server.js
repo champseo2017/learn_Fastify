@@ -1,4 +1,5 @@
 const fastify = require("fastify");
+const fs = require("fs/promises");
 
 const serverOptions = {
   logger: {
@@ -34,25 +35,21 @@ app.ready().then(() => {
 });
 
 /* 
-ตัวอย่างการนำ async handler ไปใช้ซ้ำในฟังก์ชัน handler อื่น
-
-เรากำหนดฟังก์ชัน foo และ bar เป็น named async function
-ฟังก์ชัน bar เรียกใช้ฟังก์ชัน foo และรอผลลัพธ์ด้วย await แล้วนำผลลัพธ์ที่ได้มาสร้าง response payload ใหม่
-การใช้ async function ที่ return ค่าโดยตรงแบบนี้ ทำให้เรานำ handler ไปใช้ซ้ำได้ง่ายขึ้น โดยไม่ต้องกังวลเรื่องการส่งต่อ reply object
-
-สรุปได้ว่า Fastify ให้ความยืดหยุ่นในการเขียน handler ทั้งแบบ synchronous และ asynchronous โดยเราสามารถเลือกใช้งานได้ตามความเหมาะสม ไม่ว่าจะเป็นการใช้ reply.send(), return โดยตรง หรือ await ผลลัพธ์จาก async function อื่นๆ ซึ่งช่วยให้เราจัดการกับ business logic และ response ได้ง่ายและมีประสิทธิภาพมากขึ้น
+การหลีกเลี่ยงการใช้ reply object และส่งคืน response payload โดยตรง จะช่วยให้สามารถนำฟังก์ชันของ handler มาใช้ซ้ำได้
 */
-async function foo(request, reply) {
-  return 1;
-}
+app.get("/file", function promiseHandler(request, reply) {
+  const fileName = "./package.json";
+  const readPromise = fs.readFile(fileName, { encoding: "utf8" });
+  return readPromise;
+});
 
-async function bar(request, reply) {
-  const oneResponse = await foo(request, reply);
-  return { one: oneResponse, two: 2 };
-}
+/* 
+handler เป็นฟังก์ชัน sync ที่ส่งคืน readPromise:Promise Fastify จะรอการทำงานของมันและตอบกลับ HTTP request ด้วย payload ที่ส่งคืนจาก promise chain
 
-app.get("/foo", foo);
-app.get("/bar", bar);
+เมื่อเราใช้ฟังก์ชัน async มันจะถูกแปลงเป็น Promise โดยอัตโนมัติ และ Fastify จะต้องรอให้ Promise นั้น resolve ก่อนที่จะส่ง response กลับไปยัง client ซึ่งกระบวนการนี้จะใช้เวลาและทรัพยากรเพิ่มขึ้นเล็กน้อย
+
+การใช้ฟังก์ชัน async/await จะสะดวกในการเขียนโค้ดและทำให้โค้ดอ่านง่ายขึ้น แต่มันจะมี overhead เล็กน้อยในการสร้างและจัดการ Promise รวมถึงการรอให้ Promise resolve ซึ่งอาจทำให้การทำงานของ handler ช้าลงเมื่อเทียบกับการ return Promise โดยตรง
+*/
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
@@ -81,7 +78,3 @@ app.inject(
     console.log("inject", response.payload);
   }
 );
-
-/* 
-
-*/
