@@ -2,14 +2,25 @@ const fastify = require("fastify");
 const fs = require("fs/promises");
 
 const serverOptions = {
-  logger: {
-    level: "debug",
+  logger: true,
+  disableRequestLogging: true,
+  requestIdLogLabel: "reqId",
+  requestIdHeader: "request-id",
+  genReqId: function (httpIncomingMessage) {
+    return `foo-${Math.random()}`;
   },
-  keepAliveTimeout: 5000,
-  connectionTimeout: 10000,
-  bodyLimit: 1048576, // 1MB
-  maxParamLength: 100,
 };
+
+/* 
+สร้าง Fastify app พร้อมกับกำหนด options:
+logger: เปิดใช้งาน logger
+disableRequestLogging: ปิดการ log request และ response อัตโนมัติ เพื่อจะกำหนดเอง
+requestIdLogLabel: กำหนดชื่อ field สำหรับ request ID ใน log เป็น "reqId"
+requestIdHeader: กำหนดชื่อ header ที่จะให้ request ID มาเป็น "request-id"
+genReqId: กำหนดฟังก์ชันสำหรับสุ่มสร้าง request ID เองในกรณีที่ไม่ได้ส่งมาทาง header
+การปิดการ log request/response อัตโนมัติทำให้เราต้องจัดการในการเก็บ log การเรียก API ของ client เอง ส่วนการกำหนด requestIdLogLabel, requestIdHeader และ genReqId เป็นการปรับแต่งระบบ request ID ให้เหมาะกับระบบและสภาพแวดล้อมของเรา
+
+*/
 
 const app = fastify(serverOptions);
 
@@ -35,20 +46,34 @@ app.ready().then(() => {
 });
 
 /* 
-Fastify ช่วยให้เราอ่าน input ของ client ได้ง่ายขึ้น เพราะมันรองรับ JSON input และ output เป็นหลัก และในการประมวลผล input นั้น เราเพียงแค่เข้าถึง Request component ที่ถูกส่งมาเป็น argument ของ handler function
 
-Fastify จะจัดการแปลง object ที่เรา send ให้เป็น JSON string และกำหนด Content-Type header ให้เป็น application/json โดยอัตโนมัติ
 */
 
-const cats = [];
-
-app.post("/cat", function saveCat(request, reply) {
-  cats.push(request.body);
-  reply.code(201).send({ allCats: cats });
+app.get("/xray", function xRay(request, reply) {
+  return {
+    id: request.id,
+    ip: request.ip,
+    ips: request.ips,
+    hostname: request.hostname,
+    protocol: request.protocol,
+    method: request.method,
+    url: request.url,
+    routerPath: request.routerPath,
+    is404: request.is404,
+  };
 });
 
-/* 
+/* ภายใน handler เรา return object ที่ประกอบด้วย property ต่างๆ ของ request ได้แก่:
 
+id: ID ของ request ในรูปแบบ "req-<หมายเลข>"
+ip: IP address ของ client
+ips: IP addresses ของ proxy
+hostname: hostname ของ client
+protocol: protocol ของ request (http หรือ https)
+method: HTTP method ของ request (GET, POST, ...)
+url: URL ของ request
+routerPath: URL ของ handler ทั่วไป
+is404: บอกว่า request ถูก route หรือไม่
 */
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
