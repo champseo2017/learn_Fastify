@@ -2,24 +2,34 @@ const fastify = require("fastify");
 const fs = require("fs/promises");
 
 const serverOptions = {
-  logger: true,
-  disableRequestLogging: true,
-  requestIdLogLabel: "reqId",
-  requestIdHeader: "request-id",
-  genReqId: function (httpIncomingMessage) {
-    return `foo-${Math.random()}`;
+  logger: {
+    level: "debug",
+    transport: {
+      target: "pino-pretty",
+    },
   },
 };
 
 /* 
-สร้าง Fastify app พร้อมกับกำหนด options:
-logger: เปิดใช้งาน logger
-disableRequestLogging: ปิดการ log request และ response อัตโนมัติ เพื่อจะกำหนดเอง
-requestIdLogLabel: กำหนดชื่อ field สำหรับ request ID ใน log เป็น "reqId"
-requestIdHeader: กำหนดชื่อ header ที่จะให้ request ID มาเป็น "request-id"
-genReqId: กำหนดฟังก์ชันสำหรับสุ่มสร้าง request ID เองในกรณีที่ไม่ได้ส่งมาทาง header
-การปิดการ log request/response อัตโนมัติทำให้เราต้องจัดการในการเก็บ log การเรียก API ของ client เอง ส่วนการกำหนด requestIdLogLabel, requestIdHeader และ genReqId เป็นการปรับแต่งระบบ request ID ให้เหมาะกับระบบและสภาพแวดล้อมของเรา
+Fastify โดยปกติแสดงผล log เป็น JSON string ซึ่งอ่านยาก ในการพัฒนาเราต้องการให้ log อ่านง่ายขึ้น จึงติดตั้งโมดูล `pino-pretty` ด้วยคำสั่ง `npm install pino-pretty --save-dev`
 
+จากนั้นกำหนดค่า logger ใน Fastify ดังนี้:
+
+```javascript
+const serverOptions = {
+  logger: {
+    level: 'debug',
+    transport: {
+      target: 'pino-pretty'
+    }
+  }
+}
+```
+
+- `level: 'debug'` กำหนดให้แสดง log ทุกระดับตั้งแต่ debug ขึ้นไป
+- `transport.target: 'pino-pretty'` ส่งผลลัพธ์ log ไปยังโมดูล pino-pretty เพื่อจัดรูปแบบให้อ่านง่าย
+
+เมื่อรีสตาร์ทเซิร์ฟเวอร์ จะเห็น log ที่อ่านง่ายขึ้น ช่วยให้ตรวจสอบและดีบั๊กระหว่างพัฒนาได้สะดวกมากขึ้น
 */
 
 const app = fastify(serverOptions);
@@ -63,18 +73,8 @@ app.get("/xray", function xRay(request, reply) {
   };
 });
 
-/* ภายใน handler เรา return object ที่ประกอบด้วย property ต่างๆ ของ request ได้แก่:
-
-id: ID ของ request ในรูปแบบ "req-<หมายเลข>"
-ip: IP address ของ client
-ips: IP addresses ของ proxy
-hostname: hostname ของ client
-protocol: protocol ของ request (http หรือ https)
-method: HTTP method ของ request (GET, POST, ...)
-url: URL ของ request
-routerPath: URL ของ handler ทั่วไป
-is404: บอกว่า request ถูก route หรือไม่
-*/
+/*
+ */
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {

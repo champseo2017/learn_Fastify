@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "fastify": "^4.26.2"
+  },
+  "devDependencies": {
+    "pino-pretty": "^11.0.0"
   }
 }
