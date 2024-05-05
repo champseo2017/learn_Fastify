@@ -50,12 +50,18 @@ app.register เป็นวิธีการเพิ่ม plugin เข้�
 
 app.register(async function pluginOne(pluginInstance, opts) {
   pluginInstance.addHook("onRoute", buildHook("pluginOne")); // [2]
-  pluginInstance.get("/one", async () => "one");
+  pluginInstance.get("/one", function () {
+    return {
+      one: 1,
+    };
+  });
 });
 
 app.register(async function pluginTwo(pluginInstance, opts) {
   pluginInstance.addHook("onRoute", buildHook("pluginTwo")); // [3]
-  pluginInstance.get("/two", async () => "two");
+  pluginInstance.get("/two", function () {
+    return { two: 2 };
+  });
 
   pluginInstance.register(async function pluginThree(subPlugin, opts) {
     subPlugin.addHook("onRoute", buildHook("pluginThree")); // [4]
@@ -68,6 +74,18 @@ function buildHook(id) {
     console.log(`onRoute ${id} called from ${routeOptions.path}`);
   };
 }
+
+app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
+  if (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+  const { port } = app.server.address();
+
+  app.log.info(`Server listening at ${address}`);
+  app.log.info(`HTTP Server port is ${port}`);
+  app.log.debug("Fastify listening with the config:", app.initialConfig);
+});
 
 // ปิดเซิร์ฟเวอร์และเริ่มต้นขั้นตอนการปิด
 // app.close(() => {
