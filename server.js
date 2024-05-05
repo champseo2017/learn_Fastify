@@ -10,108 +10,67 @@ const serverOptions = {
   },
 };
 
-/* 
-
-*/
-
 const app = fastify(serverOptions);
 
 // เพิ่ม onRoute's hook
-app.addHook("onRoute", (routeOptions) => {
-  console.log("onRoute hook executed");
+app.addHook("onRoute", function (routeOptions) {
+  console.log(`First onRoute hook: ${routeOptions.method} ${routeOptions.url}`);
 });
 
 // เพิ่ม onRegister's hook
-app.addHook("onRegister", (registerOptions) => {
-  console.log("onRegister hook executed");
-});
-
-// เพิ่ม onReady's hook
-app.addHook("onReady", (done) => {
-  console.log("onReady hook executed");
-  done();
-});
-
-// โหลดแอปพลิเคชันโดยไม่ต้องรอฟังคำขอ HTTP
-app.ready().then(() => {
-  console.log("Application is ready!");
-});
-
-/* 
-Path Parameter ใน Fastify:
-
-Path Parameter ใช้สำหรับกำหนดค่าที่เปลี่ยนแปลงได้ใน URL ของ route โดยใช้เครื่องหมายโคลอน (:) ตามด้วยชื่อพารามิเตอร์ เช่น `/user/:id`
-
-เมื่อมีการเรียก route ที่ตรงกับ path parameter ค่าที่ส่งมาจะถูกเก็บไว้ในออบเจ็กต์ `request.params` โดยใช้ชื่อพารามิเตอร์เป็น key เช่น `request.params.id`
-
-Fastify รองรับการใช้ Regular Expression กับ path parameter ด้วย เพื่อจำกัดค่าที่ยอมรับ โดยเขียน RegEx ไว้ในวงเล็บต่อท้ายชื่อพารามิเตอร์ เช่น `/user/:id(\\d+)` จะยอมรับเฉพาะ id ที่เป็นตัวเลขเท่านั้น
-
-ตัวอย่างโค้ด:
-
-```javascript
-// GET /user/:id
-app.get('/user/:id', (request, reply) => {
-  const userId = request.params.id
-  // ค้นหา user ด้วย userId
-})
-
-// GET /user/:id(\\d+)
-app.get('/user/:id(\\d+)', (request, reply) => {
-  const userId = Number(request.params.id)
-  // ค้นหา user ด้วย userId ที่เป็นตัวเลข
-})
-```
-
-หากค่าที่ส่งมาไม่ตรงกับ path parameter หรือ regular expression จะเกิด 404 Not Found ขึ้น
-
-ไม่ควรใช้ regular expression กับ path parameter มากเกินไป เพราะอาจส่งผลต่อประสิทธิภาพ และทำให้เกิด 404 ได้บ่อยขึ้น แนะนำให้ใช้ Fastify Validation ในการตรวจสอบค่าพารามิเตอร์แทน
-*/
-
-const cats = [
-  { name: "Fluffy", age: 3 },
-  { name: "Whiskers", age: 5 },
-  { name: "Mittens", age: 2 },
-];
-
-// POST /cat
-app.post("/cat", function (request, reply) {
-  const { name, age } = request.body;
-  const newCat = { name, age };
-  cats.push(newCat);
-  reply.code(201).send(newCat);
-});
-
-// GET /cat/:catName
-app.get("/cat/:catName", function (request, reply) {
-  const lookingFor = request.params.catName;
-  const result = cats.find((cat) => cat.name === lookingFor);
-  if (result) {
-    return { cat: result };
-  } else {
-    reply.code(404);
-    throw new Error(`cat ${lookingFor} not found`);
-  }
-});
-
-// GET /cat/:catIndex(\\d+)
-app.get("/cat/:catIndex(\\d+)", function (request, reply) {
-  const catIndex = Number(request.params.catIndex);
-  const result = cats[catIndex];
-  if (result) {
-    return { cat: result };
-  } else {
-    reply.code(404);
-    throw new Error(`cat at index ${catIndex} not found`);
-  }
-});
-
-// GET /cat/*
-// app.get("/cat/*", function (request, reply) {
-//   reply.send({ allCats: cats });
+// app.addHook("onRegister", (registerOptions) => {
+//   console.log("onRegister hook executed");
 // });
 
-/*
- */
+// เพิ่ม onReady's hook
+// app.addHook("onReady", (done) => {
+//   console.log("onReady hook executed");
+//   done();
+// });
+
+// โหลดแอปพลิเคชันโดยไม่ต้องรอฟังคำขอ HTTP
+// app.ready().then(() => {
+//   console.log("Application is ready!");
+// });
+
+/* 
+app.register เป็นวิธีการเพิ่ม plugin เข้าไปใน Fastify application โดยจะถูกเรียกใช้ในช่วง application startup ก่อนที่ server จะเริ่มรับ request
+เกี่ยวกับลำดับการทำงานของ `fastify.addHook()` และ `fastify.register()`:
+
+1. ลำดับการทำงานขึ้นอยู่กับลำดับที่เขียนในโค้ด
+2. `fastify.addHook()` ที่เรียกก่อน `fastify.register()` จะถูกเพิ่มและเรียกใช้ก่อน
+3. `fastify.register()` จะลงทะเบียนและเรียกใช้ plugin ตามลำดับ ภายใน plugin ก็สามารถเพิ่ม hook ได้ด้วย `fastify.addHook()`
+4. `fastify.addHook()` ที่เรียกหลัง `fastify.register()` จะถูกเพิ่มและเรียกใช้หลังสุด
+5. Hook ที่เพิ่มภายใน plugin จะถูกเรียกใช้เฉพาะกับ route ที่อยู่ใน plugin นั้นเท่านั้น
+6. Hook ที่เพิ่มนอก plugin จะถูกเรียกใช้กับทุก route รวมถึง route ที่อยู่ใน plugin ด้วย
+
+ดังนั้น ลำดับการทำงานจะเป็น:
+1. `fastify.addHook()` ก่อน `fastify.register()`
+2. `fastify.register()` และ `fastify.addHook()` ภายใน plugin
+3. `fastify.addHook()` หลัง `fastify.register()`
+*/
+
+app.register(async function (app) {
+  app.addHook("onRoute", (routeOptions) => {
+    console.log(
+      `Plugin onRoute hook: ${routeOptions.method} ${routeOptions.url}`
+    );
+  });
+
+  app.get("/plugin", function (request, reply) {
+    reply.send({ hello: "from plugin" });
+  });
+});
+
+app.addHook("onRoute", (routeOptions) => {
+  console.log(
+    `Second onRoute hook: ${routeOptions.method} ${routeOptions.url}`
+  );
+});
+
+app.get("/", function (request, reply) {
+  reply.send({ hello: "world" });
+});
 
 app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
   if (err) {
