@@ -13,9 +13,7 @@ const serverOptions = {
 const app = fastify(serverOptions);
 
 // เพิ่ม onRoute's hook
-app.addHook("onRoute", function (routeOptions) {
-  console.log(`First onRoute hook: ${routeOptions.method} ${routeOptions.url}`);
-});
+app.addHook("onRoute", buildHook("root"));
 
 // เพิ่ม onRegister's hook
 // app.addHook("onRegister", (registerOptions) => {
@@ -50,39 +48,26 @@ app.register เป็นวิธีการเพิ่ม plugin เข้�
 3. `fastify.addHook()` หลัง `fastify.register()`
 */
 
-app.register(async function (app) {
-  app.addHook("onRoute", (routeOptions) => {
-    console.log(
-      `Plugin onRoute hook: ${routeOptions.method} ${routeOptions.url}`
-    );
+app.register(async function pluginOne(pluginInstance, opts) {
+  pluginInstance.addHook("onRoute", buildHook("pluginOne")); // [2]
+  pluginInstance.get("/one", async () => "one");
+});
+
+app.register(async function pluginTwo(pluginInstance, opts) {
+  pluginInstance.addHook("onRoute", buildHook("pluginTwo")); // [3]
+  pluginInstance.get("/two", async () => "two");
+
+  pluginInstance.register(async function pluginThree(subPlugin, opts) {
+    subPlugin.addHook("onRoute", buildHook("pluginThree")); // [4]
+    subPlugin.get("/three", async () => "three");
   });
-
-  app.get("/plugin", function (request, reply) {
-    reply.send({ hello: "from plugin" });
-  });
 });
 
-app.addHook("onRoute", (routeOptions) => {
-  console.log(
-    `Second onRoute hook: ${routeOptions.method} ${routeOptions.url}`
-  );
-});
-
-app.get("/", function (request, reply) {
-  reply.send({ hello: "world" });
-});
-
-app.listen({ port: 3000, host: "0.0.0.0" }, (err, address) => {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
-  const { port } = app.server.address();
-
-  app.log.info(`Server listening at ${address}`);
-  app.log.info(`HTTP Server port is ${port}`);
-  app.log.debug("Fastify listening with the config:", app.initialConfig);
-});
+function buildHook(id) {
+  return function hook(routeOptions) {
+    console.log(`onRoute ${id} called from ${routeOptions.path}`);
+  };
+}
 
 // ปิดเซิร์ฟเวอร์และเริ่มต้นขั้นตอนการปิด
 // app.close(() => {
