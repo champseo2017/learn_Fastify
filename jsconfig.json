@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@routes/*": ["src/routes/*"]
+    },
+    "module": "ESNext",
+    "moduleResolution": "Node"
+  }
+}

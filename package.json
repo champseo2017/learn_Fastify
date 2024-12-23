@@ -6,12 +6,13 @@
   "author": "Champ.art.website <32265715+champseo2017@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node --watch server.js"
+    "start": "node --experimental-loader ./loader.js --watch src/server.js"
   },
   "dependencies": {
-    "fastify": "^4.26.2"
+    "fastify": "^5.2.0"
   },
   "devDependencies": {
     "pino-pretty": "^11.0.0"
-  }
+  },
+  "type": "module"
 }
